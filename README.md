@@ -12,5 +12,7 @@ Tool that helps You to collect all logs in one place.
     
 # TimeLine
 
-    0.0.1 | 9 October 2022
-    0.0.2 | In production...
+    0.0.1     | 9 October 2022
+    0.0.1.2   | CURRENT
+    0.0.2     | IN PRODUCTION...
+
