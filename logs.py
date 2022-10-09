@@ -1,8 +1,17 @@
 import staff.logic as logic
 import staff.const as const
 
+import logging
+
 # Нужно переместить константы в поле экземпляров класса из внешнего чтобы каждый экземпляр работал со своими константами
 # То есть, общие константы (версия, стабильность) будут у всех объектов одинаковые, а тип вывода и путь свои для каждого
+
+# Добавить вариант нескольких потоков выхода - Check
+# В аргументах set функции у аргумента return_path указать не любые принимаемые данные, а конкретно bool или str (ну или еще что то, если додумаюсь :))
+
+# Перенести всю логику программы (ключевые функции, а возможно и сам класс в logic.py)
+
+# Сделать возврат какого-либо ответа от каждой функции после вызова ver, set, rtn и тд (подумать, нужно ли)
 
 class Log:
     """
@@ -11,15 +20,32 @@ class Log:
 
     """
     
-    def set(self, ):
+    def __txt(self, ):
+        with open(const.Settings.RETURN_PATH, 'a') as txt_file:
+            for object in self.objects:
+                txt_file.write(object + '\n')
+            txt_file.close()
+
+    def __json(self, ):
+        pass
+    
+    def set(self, return_type: str = 'DEV_CONSOLE', return_path: any = None):
         """
         
-            Makes start changes where You should set type of answers, path etc.
+            Makes start changes where You should set type of output stream, output path etc.
             
-            Call this function at the beginning and each type you want to change settings.
+            Call this function at the beginning and each time you want to change settings.
+
+            Commonly rtn function will return objects to the common stream (in which would return print function) if return type is not given.
         
+            Commonly return_path is None because return_type is DEV_CONSOLE if nothing is given. 
+            You should give path to the file if you are going to use TXT, JSON etc. as output stream.
+
+            If You want, there is opportunity not to use set function and leave all constants as they are.
+
         """
-        
+        const.Settings.RETURN_TYPE = return_type
+        const.Settings.RETURN_PATH = return_path
         pass
 
     def ver(self, which: str = 'PRJ', return_type: str = 'SIMPLE_RETURN') -> str:
@@ -50,7 +76,10 @@ class Log:
         else:
             return const.Warnings.WRONG_TYPE_WHILE_GETTING_VERSION
         
-    def rtn(self, object: str):
+    def rtn(self, *objects: list):
+        self.objects = objects
+        for object in self.objects:
+            object = str(object)
         """
 
             Main function that takes info from settings You declared in set-function and returns answer.
@@ -59,8 +88,14 @@ class Log:
 
         """
 
+        # Изменить условия на словарь с функциями на месте значений ключей:
         if const.Settings.RETURN_TYPE == 'DEV_CONSOLE':
-            print(object)
+            for object in self.objects:
+                print(object)
+        elif const.Settings.RETURN_TYPE == 'TXT':
+            self.__txt()
+        elif const.Settings.RETURN_TYPE == 'JSON':
+            self.__json()
         else:
             pass
     
