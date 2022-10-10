@@ -2,28 +2,21 @@
 
 Tool that helps You to collect all logs in one place.
 
-# Usage
-
-    Import:
+# Import:
 
     1. from logs import Log
     2. import logs # so you will have to use logs.Log 
 
-# 
-
-    Create class object:
+# Create class object:
 
     <var_name> = Log()
 
-#
-
-    Set up object (if you need to):
+# Set up object (if you need to):
 
     <var_name>.set(<settings>)
 
-#
+# You can start:
 
-    You can start!
     Call rtn function to start streaming process
 
     <var_name>.rtn(<settings>)

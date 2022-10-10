@@ -2,6 +2,7 @@ import staff.logic as logic
 import staff.const as const
 
 import logging
+import json
 
 # Нужно переместить константы в поле экземпляров класса из внешнего чтобы каждый экземпляр работал со своими константами
 # То есть, общие константы (версия, стабильность) будут у всех объектов одинаковые, а тип вывода и путь свои для каждого
@@ -12,6 +13,9 @@ import logging
 # Перенести всю логику программы (ключевые функции, а возможно и сам класс в logic.py)
 
 # Сделать возврат какого-либо ответа от каждой функции после вызова ver, set, rtn и тд (подумать, нужно ли)
+
+# Установить проверку добавления данных в JSON (чтобы были пары ключ - значение)
+# Добавить в json добавление не просто текста, а данных в существующий словарь, либо его создание
 
 class Log:
     """
@@ -27,6 +31,12 @@ class Log:
             txt_file.close()
 
     def __json(self, ):
+        with open(const.Settings.RETURN_PATH, 'a') as json_file:
+            for object in self.objects:
+                json.dump(object, json_file)
+            json_file.close()
+
+    def __http(self, ):
         pass
     
     def set(self, return_type: str = 'DEV_CONSOLE', return_path: any = None):
@@ -36,10 +46,10 @@ class Log:
             
             Call this function at the beginning and each time you want to change settings.
 
-            Commonly rtn function will return objects to the common stream (in which would return print function) if return type is not given.
+            Commonly `rtn` function will return objects to the common stream (in which would return `print` function) if return type is not given.
         
-            Commonly return_path is None because return_type is DEV_CONSOLE if nothing is given. 
-            You should give path to the file if you are going to use TXT, JSON etc. as output stream.
+            Commonly `return_path` is None because `return_type` is `DEV_CONSOLE` if nothing is given. 
+            You should give path to the file if you are going to use `TXT`, `JSON` etc. as output stream.
 
             If You want, there is opportunity not to use set function and leave all constants as they are.
 
@@ -53,10 +63,10 @@ class Log:
 
             Returns modules current version in given type.
 
-            If type was given not correctly function fill return warning in SIMPLE_RETURN.
+            If type was given not correctly function fill return warning in `SIMPLE_RETURN`.
 
-            which: str - sets which version you want to get (DEV, PRJ, RLS)
-            return_type: str - sets type of return (SIMPLE_RETURN, MODULE_RETURN)
+            `which`: str - sets which version you want to get (`DEV`, `PRJ`, `RLS`)
+            `return_type`: str - sets type of return (`SIMPLE_RETURN`, `MODULE_RETURN`)
 
         """
         _ver: str
@@ -77,16 +87,16 @@ class Log:
             return const.Warnings.WRONG_TYPE_WHILE_GETTING_VERSION
         
     def rtn(self, *objects: list):
+        """
+
+            Main function that takes info from settings You declared in `set` function and returns answer.
+
+            `object`: str - object that you want to return.
+
+        """
         self.objects = objects
         for object in self.objects:
             object = str(object)
-        """
-
-            Main function that takes info from settings You declared in set-function and returns answer.
-
-            object: str - object that you want to return.
-
-        """
 
         # Изменить условия на словарь с функциями на месте значений ключей:
         if const.Settings.RETURN_TYPE == 'DEV_CONSOLE':
@@ -96,6 +106,8 @@ class Log:
             self.__txt()
         elif const.Settings.RETURN_TYPE == 'JSON':
             self.__json()
+        elif const.Settings.RETURN_TYPE == 'HTTP':
+            self.__http()
         else:
             pass
     
