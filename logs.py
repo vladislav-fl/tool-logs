@@ -4,6 +4,8 @@ import staff.const as const
 import logging
 import json
 
+import requests
+
 # Нужно переместить константы в поле экземпляров класса из внешнего чтобы каждый экземпляр работал со своими константами
 # То есть, общие константы (версия, стабильность) будут у всех объектов одинаковые, а тип вывода и путь свои для каждого
 
@@ -36,8 +38,16 @@ class Log:
                 json.dump(object, json_file)
             json_file.close()
 
+    # http session always use POST method to connect with server and return it stream
     def __http(self, ):
-        pass
+        for object in self.objects:
+            response: requests.Response = requests.post(url=const.Settings.RETURN_PATH, data=object)
+            if response.status_code == 200:
+                pass
+                # Return info that all OK
+            else:
+                pass
+                # Return info that error accured during this command and send response status code
     
     def set(self, return_type: str = 'DEV_CONSOLE', return_path: any = None):
         """
