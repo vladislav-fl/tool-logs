@@ -4,7 +4,7 @@ Tool that helps You to collect all logs in one place.
 
 # Info:
 
-    All operations returns `status`. That means that if operation was OK, it will return `Message` otherwise it will return `Error` or `Warning`.
+    All operations returns `status` as Status class. That means that if operation was OK, it will return `Message` otherwise it will return `Error` or `Warning`.
 
     BUT:
         Function `ver` will return module version to choosen stream if operation was OK.

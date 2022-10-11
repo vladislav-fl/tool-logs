@@ -12,6 +12,8 @@ import requests
 # Нужно переместить константы в поле экземпляров класса из внешнего чтобы каждый экземпляр работал со своими константами
 # То есть, общие константы (версия, стабильность) будут у всех объектов одинаковые, а тип вывода и путь свои для каждого
 
+# Переместить данные из const.py в json
+
 # В аргументах set функции у аргумента return_path указать не любые принимаемые данные, а конкретно bool или str (ну или еще что то, если додумаюсь :))
 
 # Перенести всю логику программы (ключевые функции, а возможно и сам класс в logic.py)
@@ -34,30 +36,30 @@ class Log:
     
     def __txt(self, ):
         with open(const.Settings.RETURN_PATH, 'a') as txt_file:
-            for object in self.objects:
+            for object in const.Settings.RETURN_MESSAGE:
                 txt_file.write(object + '\n')
             txt_file.close()
-        return const.Messages.OPERATION_DONE
+        return const.Messages.OPERATION_DONE['ID'], const.Messages.OPERATION_DONE['MESSAGE']
 
     def __json(self, ):
         with open(const.Settings.RETURN_PATH, 'a') as json_file:
-            for object in self.objects:
+            for object in const.Settings.RETURN_MESSAGE:
                 json.dump(object, json_file)
             json_file.close()
-        return const.Messages.OPERATION_DONE
+        return const.Messages.OPERATION_DONE['ID'], const.Messages.OPERATION_DONE['MESSAGE']
 
     # http session always use POST method to connect with server and return it stream
     def __http(self, ):
-        for object in self.objects:
+        for object in const.Settings.RETURN_MESSAGE:
             response: requests.Response = requests.post(url=const.Settings.RETURN_PATH, data=object)
             if response.status_code == 200:
                 # Return info that all OK
-                return const.Messages.OPERATION_DONE
+                return const.Messages.OPERATION_DONE['ID'], const.Messages.OPERATION_DONE['MESSAGE']
             else:
-                return const.Errors.HTTP_RETURNED_BAD_STATUS + ': ' + str(response.status_code)
+                return const.Errors.HTTP_RETURNED_BAD_STATUS['ID'], const.Errors.HTTP_RETURNED_BAD_STATUS['MESSAGE'] + ': ' + str(response.status_code)
                 # Return info that error accured during this command and send response status code
     
-    def set(self, return_type: str = 'DEV_CONSOLE', return_path: any = None, return_status_by_default: bool = True, test: bool = False) -> dict:
+    def set(self, return_type: str = 'DEV_CONSOLE', return_path: any = None, return_status_by_default: bool = True, test: bool = False) -> const.Settings.Status:
         """
         
             Makes start changes where You should set type of output stream, output path etc.
@@ -82,10 +84,9 @@ class Log:
         const.Settings.TEST = test
         
         if const.Settings.TEST:
-            const.Settings.OPERATION_STATUS = self.rtn('')
-            return const.Settings.OPERATION_STATUS
+            return self.rtn('')
         elif not const.Settings.TEST:
-            return const.Messages.OPERATION_DONE
+            return const.Messages.OPERATION_DONE['ID'], const.Messages.OPERATION_DONE['MESSAGE']
 
     def ver(self, which: str = 'PRJ', return_type: str = 'SIMPLE_RETURN') -> any:
         """
@@ -115,7 +116,7 @@ class Log:
         else:
             return const.Warnings.WRONG_TYPE_WHILE_GETTING_VERSION
         
-    def rtn(self, *objects: list) -> dict:
+    def rtn(self, *objects: list) -> const.Settings.Status:
         """
 
             Main function that takes info from settings You declared in `set` function and returns answer.
@@ -129,30 +130,49 @@ class Log:
             If it is cant be done, status will go to common stream.
 
         """
-        self.objects = objects
-        for object in self.objects:
-            object = str(object)
+        if const.Settings._ANTI_RECURSION in [0, 1]:
+            const.Settings.RETURN_MESSAGE = objects
+            const.Settings.RETURN_MESSAGE = list(const.Settings.RETURN_MESSAGE)
+            for i in range(len(const.Settings.RETURN_MESSAGE)):
+                const.Settings.RETURN_MESSAGE[i] = str(const.Settings.RETURN_MESSAGE[i])
 
-        # Изменить условия на словарь с функциями на месте значений ключей:
-        status: str
-        if const.Settings.RETURN_TYPE == 'DEV_CONSOLE':
-            for object in self.objects:
-                print(object)
-            status = const.Messages.OPERATION_DONE
-        elif const.Settings.RETURN_TYPE == 'TXT':
-            status = self.__txt()
-        elif const.Settings.RETURN_TYPE == 'JSON':
-            status = self.__json()
-        elif const.Settings.RETURN_TYPE == 'HTTP':
-            status = self.__http()
+            self.__find_path()
+
+            if const.Settings.RETURN_STATUS_BY_DEFAULT:
+                return const.Settings.Status
+
+            elif not const.Settings.RETURN_STATUS_BY_DEFAULT:
+                if const.Settings._STANDART_STREAM_RETURN_IF_OPERATION_TYPE_IS_BAD:
+                    const.Settings._STANDART_STREAM_RETURN_IF_OPERATION_TYPE_IS_BAD = False
+                    
+                    return const.Settings.Status
+                else:
+                    const.Settings._ANTI_RECURSION += 1
+                    self.rtn(const.Settings.Status.ID, const.Settings.Status.MESSAGE)
         else:
-            pass
-        if const.Settings.RETURN_STATUS_BY_DEFAULT:
-            return status
-        elif not const.Settings.RETURN_STATUS_BY_DEFAULT:
-            # Добавить возврат статуса в рабочее место
-            pass
-    
+            const.Settings._ANTI_RECURSION = False
+
+    def __find_path(self, ):
+        # Изменить условия на словарь с функциями на месте значений ключей:
+        if const.Settings.RETURN_TYPE == 'DEV_CONSOLE':
+            for object in const.Settings.RETURN_MESSAGE:
+                print(object)
+            const.Settings.Status.ID = const.Messages.OPERATION_DONE['ID']
+            const.Settings.Status.MESSAGE = const.Messages.OPERATION_DONE['MESSAGE']
+        elif const.Settings.RETURN_TYPE == 'TXT':
+            const.Settings.Status.ID, const.Settings.Status.MESSAGE = self.__txt()
+        elif const.Settings.RETURN_TYPE == 'JSON':
+            const.Settings.Status.ID, const.Settings.Status.MESSAGE = self.__json()
+        elif const.Settings.RETURN_TYPE == 'HTTP':
+            const.Settings.Status.ID, const.Settings.Status.MESSAGE = self.__http()
+        else:
+            # Если тип файла указан неправильно, делается возврат значения в стандартный поток (переменная):
+            if not const.Settings.RETURN_STATUS_BY_DEFAULT:
+                const.Settings._STANDART_STREAM_RETURN_IF_OPERATION_TYPE_IS_BAD = True
+
+            const.Settings.Status.ID = const.Warnings.WRONG_TYPE_WHILE_RETURNING['ID']
+            const.Settings.Status.MESSAGE = const.Warnings.WRONG_TYPE_WHILE_RETURNING['MESSAGE']
+
 
 def main():
     """
