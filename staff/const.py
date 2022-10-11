@@ -1,6 +1,6 @@
 class Settings:
     DEV         = True
-    DEV_VER     = '0.0.4'
+    DEV_VER     = '0.0.4.1'
     DEV_STABLE  = True
 
     PRJ         = 'DEV'
@@ -18,6 +18,9 @@ class Settings:
     RETURN_PATH              = None
     RETURN_MESSAGE           = ''
 
+    NEED_TO_RETURN_LOG_ID    = False
+    OBJECTS_IN_ONE_LINE      = False
+
     TEST                     = False
     RETURN_STATUS_BY_DEFAULT = True
 
@@ -25,6 +28,8 @@ class Settings:
 
     _ANTI_RECURSION          = 0
     _STANDART_STREAM_RETURN_IF_OPERATION_TYPE_IS_BAD = False
+
+    LOG_ID                   = 0
     
     class Status:
         ID                   = 0

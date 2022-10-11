@@ -47,3 +47,4 @@ Tool that helps You to collect all logs in one place.
     0.0.3     |   10 October 2022
 
     0.0.4     |   11 October 2022
+    0.0.4.1   |   11 October 2022

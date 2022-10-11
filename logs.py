@@ -8,6 +8,7 @@ import requests
 
 # Сделать возврат какого-либо ответа от каждой функции после вызова ver, set, rtn и тд - Check
 # Добавить вариант нескольких потоков выхода - Check
+# Добавить тестовую проверку на правильное соединение - Check
 
 # Нужно переместить константы в поле экземпляров класса из внешнего чтобы каждый экземпляр работал со своими константами
 # То есть, общие константы (версия, стабильность) будут у всех объектов одинаковые, а тип вывода и путь свои для каждого
@@ -21,11 +22,11 @@ import requests
 # Установить проверку добавления данных в JSON (чтобы были пары ключ - значение)
 # Добавить в json добавление не просто текста, а данных в существующий словарь, либо его создание
 
-# Добавить тестовую проверку на правильное соединение
-
 # Добавить коды ошибок
 
 # Сделать тесты и исправить ошибки
+
+# Добавить лог в линию и id лога в http
 
 class Log:
     """
@@ -36,16 +37,59 @@ class Log:
     
     def __txt(self, ):
         with open(const.Settings.RETURN_PATH, 'a') as txt_file:
-            for object in const.Settings.RETURN_MESSAGE:
-                txt_file.write(object + '\n')
+            if not const.Settings.NEED_TO_RETURN_LOG_ID and not const.Settings.OBJECTS_IN_ONE_LINE:
+                for object in const.Settings.RETURN_MESSAGE:
+                    txt_file.write(object + '\n')
+
+            elif const.Settings.NEED_TO_RETURN_LOG_ID and not const.Settings.OBJECTS_IN_ONE_LINE:
+                for object in const.Settings.RETURN_MESSAGE:
+                    txt_file.write(f'[{const.Settings.LOG_ID}] - ' + object + '\n')
+
+            elif const.Settings.NEED_TO_RETURN_LOG_ID and const.Settings.OBJECTS_IN_ONE_LINE:
+                line_log: str = ''
+                for object in const.Settings.RETURN_MESSAGE:
+                    line_log += object
+                txt_file.write(f'[{const.Settings.LOG_ID}] - ' + line_log + '\n')
+                del line_log
+
+            elif not const.Settings.NEED_TO_RETURN_LOG_ID and const.Settings.OBJECTS_IN_ONE_LINE:
+                line_log: str = ''
+                for object in const.Settings.RETURN_MESSAGE:
+                    line_log += object
+                print(line_log)
+                txt_file.write(line_log + '\n')
+                del line_log
+
             txt_file.close()
+            
         return const.Messages.OPERATION_DONE['ID'], const.Messages.OPERATION_DONE['MESSAGE']
 
     def __json(self, ):
         with open(const.Settings.RETURN_PATH, 'a') as json_file:
-            for object in const.Settings.RETURN_MESSAGE:
-                json.dump(object, json_file)
+            if not const.Settings.NEED_TO_RETURN_LOG_ID and not const.Settings.OBJECTS_IN_ONE_LINE:
+                for object in const.Settings.RETURN_MESSAGE:
+                    json.dump(object + '\n', json_file)
+
+            elif const.Settings.NEED_TO_RETURN_LOG_ID and not const.Settings.OBJECTS_IN_ONE_LINE:
+                for object in const.Settings.RETURN_MESSAGE:
+                    json.dump(f'[{const.Settings.LOG_ID}] - ' + object + '\n', json_file)
+
+            elif const.Settings.NEED_TO_RETURN_LOG_ID and const.Settings.OBJECTS_IN_ONE_LINE:
+                line_log: str = ''
+                for object in const.Settings.RETURN_MESSAGE:
+                    line_log += object
+                json.dump(f'[{const.Settings.LOG_ID}] - ' + line_log + '\n', json_file)
+                del line_log
+
+            elif not const.Settings.NEED_TO_RETURN_LOG_ID and const.Settings.OBJECTS_IN_ONE_LINE:
+                line_log: str = ''
+                for object in const.Settings.RETURN_MESSAGE:
+                    line_log += object
+                json.dump(line_log + '\n', json_file)
+                del line_log
+            
             json_file.close()
+
         return const.Messages.OPERATION_DONE['ID'], const.Messages.OPERATION_DONE['MESSAGE']
 
     # http session always use POST method to connect with server and return it stream
@@ -59,7 +103,7 @@ class Log:
                 return const.Errors.HTTP_RETURNED_BAD_STATUS['ID'], const.Errors.HTTP_RETURNED_BAD_STATUS['MESSAGE'] + ': ' + str(response.status_code)
                 # Return info that error accured during this command and send response status code
     
-    def set(self, return_type: str = 'DEV_CONSOLE', return_path: any = None, return_status_by_default: bool = True, test: bool = False) -> const.Settings.Status:
+    def set(self, return_type: str = 'DEV_CONSOLE', return_path: any = None, return_status_by_default: bool = True, test: bool = False, need_to_return_log_id: bool = False, objects_in_one_line: bool = False) -> const.Settings.Status:
         """
         
             Makes start changes where You should set type of output stream, output path etc.
@@ -82,6 +126,8 @@ class Log:
         const.Settings.RETURN_PATH = return_path
         const.Settings.RETURN_STATUS_BY_DEFAULT = return_status_by_default
         const.Settings.TEST = test
+        const.Settings.NEED_TO_RETURN_LOG_ID = need_to_return_log_id
+        const.Settings.OBJECTS_IN_ONE_LINE = objects_in_one_line
         
         if const.Settings.TEST:
             return self.rtn('')
@@ -130,6 +176,8 @@ class Log:
             If it is cant be done, status will go to common stream.
 
         """
+        const.Settings.LOG_ID += 1
+
         if const.Settings._ANTI_RECURSION in [0, 1]:
             const.Settings.RETURN_MESSAGE = objects
             const.Settings.RETURN_MESSAGE = list(const.Settings.RETURN_MESSAGE)
@@ -144,7 +192,7 @@ class Log:
             elif not const.Settings.RETURN_STATUS_BY_DEFAULT:
                 if const.Settings._STANDART_STREAM_RETURN_IF_OPERATION_TYPE_IS_BAD:
                     const.Settings._STANDART_STREAM_RETURN_IF_OPERATION_TYPE_IS_BAD = False
-                    
+
                     return const.Settings.Status
                 else:
                     const.Settings._ANTI_RECURSION += 1
