@@ -34,7 +34,7 @@ Tool that helps You to collect all logs in one place.
 
     <var_name>.rtn(<settings>)
     
-# TimeLine
+# Project TimeLine:
 
     0.0.1     |   9 October 2022
     0.0.1.2   |   9 October 2022
@@ -45,3 +45,5 @@ Tool that helps You to collect all logs in one place.
     0.0.2.3   |   10 October 2022
     
     0.0.3     |   10 October 2022
+
+    0.0.4     |   11 October 2022
