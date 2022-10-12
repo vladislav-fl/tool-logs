@@ -1,10 +1,7 @@
-import staff.logic as logic
-import staff.const as const
+from staff.logic import *
 
-import logging
-import json
-
-import requests
+# ONLY 1 LOG PER FUNCTION CALL!!!
+# PREFIX_TYPE = LOG_ID, NONE, CUSTOM
 
 # Сделать возврат какого-либо ответа от каждой функции после вызова ver, set, rtn и тд - Check
 # Добавить вариант нескольких потоков выхода - Check
@@ -28,208 +25,153 @@ import requests
 
 # Добавить лог в линию и id лога в http
 
-class Log:
+class Log():
     """
-
         Main class for working with Logs.
-
     """
-    
-    def __txt(self, ):
-        with open(const.Settings.RETURN_PATH, 'a') as txt_file:
-            if not const.Settings.NEED_TO_RETURN_LOG_ID and not const.Settings.OBJECTS_IN_ONE_LINE:
-                for object in const.Settings.RETURN_MESSAGE:
-                    txt_file.write(object + '\n')
+    def __init__(self, return_status: bool = True, prefix_type: str = 'LOG_ID', prefix: str = '') -> None:
+        """
+            Set argumets in the way you want to use Log functions
 
-            elif const.Settings.NEED_TO_RETURN_LOG_ID and not const.Settings.OBJECTS_IN_ONE_LINE:
-                for object in const.Settings.RETURN_MESSAGE:
-                    txt_file.write(f'[{const.Settings.LOG_ID}] - ' + object + '\n')
-
-            elif const.Settings.NEED_TO_RETURN_LOG_ID and const.Settings.OBJECTS_IN_ONE_LINE:
-                line_log: str = ''
-                for object in const.Settings.RETURN_MESSAGE:
-                    line_log += object
-                txt_file.write(f'[{const.Settings.LOG_ID}] - ' + line_log + '\n')
-                del line_log
-
-            elif not const.Settings.NEED_TO_RETURN_LOG_ID and const.Settings.OBJECTS_IN_ONE_LINE:
-                line_log: str = ''
-                for object in const.Settings.RETURN_MESSAGE:
-                    line_log += object
-                print(line_log)
-                txt_file.write(line_log + '\n')
-                del line_log
-
-            txt_file.close()
+            `return_status` - set `True` if you need Status class to be returned to variable while working with Logs
             
-        return const.Messages.OPERATION_DONE['ID'], const.Messages.OPERATION_DONE['MESSAGE']
-
-    def __json(self, ):
-        with open(const.Settings.RETURN_PATH, 'a') as json_file:
-            if not const.Settings.NEED_TO_RETURN_LOG_ID and not const.Settings.OBJECTS_IN_ONE_LINE:
-                for object in const.Settings.RETURN_MESSAGE:
-                    json.dump(object + '\n', json_file)
-
-            elif const.Settings.NEED_TO_RETURN_LOG_ID and not const.Settings.OBJECTS_IN_ONE_LINE:
-                for object in const.Settings.RETURN_MESSAGE:
-                    json.dump(f'[{const.Settings.LOG_ID}] - ' + object + '\n', json_file)
-
-            elif const.Settings.NEED_TO_RETURN_LOG_ID and const.Settings.OBJECTS_IN_ONE_LINE:
-                line_log: str = ''
-                for object in const.Settings.RETURN_MESSAGE:
-                    line_log += object
-                json.dump(f'[{const.Settings.LOG_ID}] - ' + line_log + '\n', json_file)
-                del line_log
-
-            elif not const.Settings.NEED_TO_RETURN_LOG_ID and const.Settings.OBJECTS_IN_ONE_LINE:
-                line_log: str = ''
-                for object in const.Settings.RETURN_MESSAGE:
-                    line_log += object
-                json.dump(line_log + '\n', json_file)
-                del line_log
+            `prefix_type` - set `LOG_ID`, `CUSTOM` if you need to add log id or your own message to logs, or set `NONE` if you dont want to add any message to logs
             
-            json_file.close()
+            `prefix` - set '' if you dont want any message added to your logs (dont forget to set `prefix_type` to 'NONE'), or give your custom message (and set `prefix_type` to `LOG_ID` or `CUSTOM`)
 
-        return const.Messages.OPERATION_DONE['ID'], const.Messages.OPERATION_DONE['MESSAGE']
+            Example:
+            `log` = Log(`return_status` = True, `prefix_type` = 'NONE', `prefix` = '')
+        """
+        Settings.PREFIX_TYPE = prefix_type
+        Settings.PREFIX = prefix
+        Settings.RETURN_STATUS = return_status
 
-    # http session always use POST method to connect with server and return it stream
-    def __http(self, ):
-        for object in const.Settings.RETURN_MESSAGE:
-            response: requests.Response = requests.post(url=const.Settings.RETURN_PATH, data=object)
-            if response.status_code == 200:
-                # Return info that all OK
-                return const.Messages.OPERATION_DONE['ID'], const.Messages.OPERATION_DONE['MESSAGE']
-            else:
-                return const.Errors.HTTP_RETURNED_BAD_STATUS['ID'], const.Errors.HTTP_RETURNED_BAD_STATUS['MESSAGE'] + ': ' + str(response.status_code)
-                # Return info that error accured during this command and send response status code
-    
-    def set(self, return_type: str = 'DEV_CONSOLE', return_path: any = None, return_status_by_default: bool = True, test: bool = False, need_to_return_log_id: bool = False, objects_in_one_line: bool = False) -> const.Settings.Status:
+    def json(self, path: str, log: Union[dict, list]) -> Optional[Settings.Status]:
         """
         
-            Makes start changes where You should set type of output stream, output path etc.
-            
-            Call this function at the beginning and each time you want to change settings.
-
-            Commonly `rtn` function will return objects to the common stream (in which would return `print` function) if return type is not given.
+        """
+        Settings.STREAM_LOG = log
+        Settings.STREAM_PATH = path
         
-            Commonly `return_path` is None because `return_type` is `DEV_CONSOLE` if nothing is given. 
-            You should give path to the file if you are going to use `TXT`, `JSON` etc. as output stream.
+        try:
+            with open(Settings.STREAM_PATH, 'a') as file:
+                with open(Settings.STREAM_PATH, 'r') as file_reader:
+                    if file_reader.read() != '':
+                        file.write(',')
+                    file_reader.close()
+                dump(Settings.STREAM_LOG, file)
+                file.close()
+        except:
+            Settings.Status.ID = Errors.CANT_OPEN_JSON_FILE['ID']
+            Settings.Status.MESSAGE = Errors.CANT_OPEN_JSON_FILE['MESSAGE']
 
-            Set test = True to test connection and get status of operation. It is recommended to test connection before using its stream.
-
-            Test will send to work stream empty message just to test connection.
-
-            If You want, there is opportunity not to use set function and leave all constants as they are.
-
-        """
-        const.Settings.RETURN_TYPE = return_type
-        const.Settings.RETURN_PATH = return_path
-        const.Settings.RETURN_STATUS_BY_DEFAULT = return_status_by_default
-        const.Settings.TEST = test
-        const.Settings.NEED_TO_RETURN_LOG_ID = need_to_return_log_id
-        const.Settings.OBJECTS_IN_ONE_LINE = objects_in_one_line
+            return Settings.Status if Settings.RETURN_STATUS else None
         
-        if const.Settings.TEST:
-            return self.rtn('')
-        elif not const.Settings.TEST:
-            return const.Messages.OPERATION_DONE['ID'], const.Messages.OPERATION_DONE['MESSAGE']
+        Settings.LOG_ID += 1
+        Settings.Status.ID = Messages.OPERATION_DONE['ID']
+        Settings.Status.MESSAGE = Messages.OPERATION_DONE['MESSAGE']
 
-    def ver(self, which: str = 'PRJ', return_type: str = 'SIMPLE_RETURN') -> any:
-        """
+        return Settings.Status if Settings.RETURN_STATUS else None
 
-            Returns modules current version in given type.
+    def txt(self, path: str, log: any) -> Optional[Settings.Status]:
+        Settings.STREAM_LOG = str(log)
+        Settings.STREAM_PATH = path
 
-            If type was given not correctly function fill return warning in `SIMPLE_RETURN`.
-
-            `which`: str - sets which version you want to get (`DEV`, `PRJ`, `RLS`)
-            `return_type`: str - sets type of return (`SIMPLE_RETURN`, `MODULE_RETURN`)
-
-        """
-        _ver: str
-        if which == 'DEV':
-            _ver = const.Settings.DEV_VER
-        elif which == 'PRJ':
-            _ver = const.Settings.PRJ_VER
-        elif which == 'RLS':
-            _ver = const.Settings.RLS_VER
+        if Settings.PREFIX_TYPE == 'LOG_ID':
+            Settings.STREAM_LOG = f'[{str(Settings.LOG_ID)}] ' + Settings.STREAM_LOG
+        elif Settings.PREFIX_TYPE == 'CUSTOM':
+            Settings.STREAM_LOG = f'{str(Settings.PREFIX)} ' + Settings.STREAM_LOG
+        elif Settings.PREFIX_TYPE == 'NONE':
+            pass
         else:
-            _ver = const.Warnings.WRONG_WHICH_WHILE_GETTING_VERSION
+            Settings.Status.ID = Warnings.WRONG_PREFIX_TYPE_WHILE_STREAMING['ID']
+            Settings.Status.MESSAGE = Warnings.WRONG_PREFIX_TYPE_WHILE_STREAMING['MESSAGE']
+
+            return Settings.Status if Settings.RETURN_STATUS else None
+
+        try:
+            with open(Settings.STREAM_PATH, 'a') as file:
+                file.write(Settings.STREAM_LOG + '\n')
+                file.close()
+        except:
+            Settings.Status.ID = Errors.CANT_OPEN_TXT_FILE['ID']
+            Settings.Status.MESSAGE = Errors.CANT_OPEN_TXT_FILE['MESSAGE']
+
+            return Settings.Status if Settings.RETURN_STATUS else None
         
-        if return_type == 'SIMPLE_RETURN':
-            return _ver
-        elif return_type == 'MODULE_RETURN':
-            Log.rtn(_ver)
+        Settings.LOG_ID += 1
+        Settings.Status.ID = Messages.OPERATION_DONE['ID']
+        Settings.Status.MESSAGE = Messages.OPERATION_DONE['MESSAGE']
+
+        return Settings.Status if Settings.RETURN_STATUS else None
+
+    def http(self, path: str, log: any) -> Optional[Settings.Status]:
+        Settings.STREAM_LOG = str(log)
+        Settings.STREAM_PATH = path
+
+        if Settings.PREFIX_TYPE == 'LOG_ID':
+            Settings.STREAM_LOG = f'[{str(Settings.LOG_ID)}] ' + Settings.STREAM_LOG
+        elif Settings.PREFIX_TYPE == 'CUSTOM':
+            Settings.STREAM_LOG = f'{str(Settings.PREFIX)} ' + Settings.STREAM_LOG
+        elif Settings.PREFIX_TYPE == 'NONE':
+            pass
         else:
-            return const.Warnings.WRONG_TYPE_WHILE_GETTING_VERSION
-        
-    def rtn(self, *objects: list) -> const.Settings.Status:
-        """
+            Settings.Status.ID = Warnings.WRONG_PREFIX_TYPE_WHILE_STREAMING['ID']
+            Settings.Status.MESSAGE = Warnings.WRONG_PREFIX_TYPE_WHILE_STREAMING['MESSAGE']
 
-            Main function that takes info from settings You declared in `set` function and returns answer.
+            return Settings.Status if Settings.RETURN_STATUS else None
 
-            `object`: str - object that you want to return.
+        response: Response = post(url=Settings.STREAM_PATH, data=Settings.STREAM_LOG)
 
-            Function returns operations status. Status can be `Error`, `Warning` or simple `Message`.
+        if response.status_code == 200:
+            Settings.Status.ID = Messages.OPERATION_DONE['ID']
+            Settings.Status.MESSAGE = Messages.OPERATION_DONE['MESSAGE']
 
-            By default, status returns to common stream (variable, that takes return info from `rtn` function),
-            but you can set this to return status to working place where you wanted to send log in `set` function. 
-            If it is cant be done, status will go to common stream.
+            return Settings.Status if Settings.RETURN_STATUS else None
 
-        """
-        const.Settings.LOG_ID += 1
-
-        if const.Settings._ANTI_RECURSION in [0, 1]:
-            const.Settings.RETURN_MESSAGE = objects
-            const.Settings.RETURN_MESSAGE = list(const.Settings.RETURN_MESSAGE)
-            for i in range(len(const.Settings.RETURN_MESSAGE)):
-                const.Settings.RETURN_MESSAGE[i] = str(const.Settings.RETURN_MESSAGE[i])
-
-            self.__find_path()
-
-            if const.Settings.RETURN_STATUS_BY_DEFAULT:
-                return const.Settings.Status
-
-            elif not const.Settings.RETURN_STATUS_BY_DEFAULT:
-                if const.Settings._STANDART_STREAM_RETURN_IF_OPERATION_TYPE_IS_BAD:
-                    const.Settings._STANDART_STREAM_RETURN_IF_OPERATION_TYPE_IS_BAD = False
-
-                    return const.Settings.Status
-                else:
-                    const.Settings._ANTI_RECURSION += 1
-                    self.rtn(const.Settings.Status.ID, const.Settings.Status.MESSAGE)
         else:
-            const.Settings._ANTI_RECURSION = False
+            Settings.Status.ID = Errors.HTTP_RETURNED_BAD_STATUS['ID']
+            Settings.Status.MESSAGE = Errors.HTTP_RETURNED_BAD_STATUS['MESSAGE'] + ': ' + str(response.status_code)
 
-    def __find_path(self, ):
-        # Изменить условия на словарь с функциями на месте значений ключей:
-        if const.Settings.RETURN_TYPE == 'DEV_CONSOLE':
-            for object in const.Settings.RETURN_MESSAGE:
-                print(object)
-            const.Settings.Status.ID = const.Messages.OPERATION_DONE['ID']
-            const.Settings.Status.MESSAGE = const.Messages.OPERATION_DONE['MESSAGE']
-        elif const.Settings.RETURN_TYPE == 'TXT':
-            const.Settings.Status.ID, const.Settings.Status.MESSAGE = self.__txt()
-        elif const.Settings.RETURN_TYPE == 'JSON':
-            const.Settings.Status.ID, const.Settings.Status.MESSAGE = self.__json()
-        elif const.Settings.RETURN_TYPE == 'HTTP':
-            const.Settings.Status.ID, const.Settings.Status.MESSAGE = self.__http()
+            return Settings.Status if Settings.RETURN_STATUS else None
+
+    def print(self, log: any) -> Optional[Settings.Status]:
+        Settings.STREAM_LOG = str(log)
+        Settings.STREAM_PATH = ''
+
+        if Settings.PREFIX_TYPE == 'LOG_ID':
+            Settings.STREAM_LOG = f'[{str(Settings.LOG_ID)}] ' + Settings.STREAM_LOG
+        elif Settings.PREFIX_TYPE == 'CUSTOM':
+            Settings.STREAM_LOG = f'{str(Settings.PREFIX)} ' + Settings.STREAM_LOG
+        elif Settings.PREFIX_TYPE == 'NONE':
+            pass
         else:
-            # Если тип файла указан неправильно, делается возврат значения в стандартный поток (переменная):
-            if not const.Settings.RETURN_STATUS_BY_DEFAULT:
-                const.Settings._STANDART_STREAM_RETURN_IF_OPERATION_TYPE_IS_BAD = True
+            Settings.Status.ID = Warnings.WRONG_PREFIX_TYPE_WHILE_STREAMING['ID']
+            Settings.Status.MESSAGE = Warnings.WRONG_PREFIX_TYPE_WHILE_STREAMING['MESSAGE']
 
-            const.Settings.Status.ID = const.Warnings.WRONG_TYPE_WHILE_RETURNING['ID']
-            const.Settings.Status.MESSAGE = const.Warnings.WRONG_TYPE_WHILE_RETURNING['MESSAGE']
+            return Settings.Status if Settings.RETURN_STATUS else None
 
+        print(Settings.STREAM_LOG)
 
-def main():
-    """
-    
-        Dont call this function, because it cant be called as main.
+        Settings.Status.ID = Messages.OPERATION_DONE['ID']
+        Settings.Status.MESSAGE = Messages.OPERATION_DONE['MESSAGE']
 
-    """
-    
-    return const.Errors.ACTIVATED_AS_MAIN
+        return Settings.Status if Settings.RETURN_STATUS else None
 
-if '__name__' == '__main__':
-    main()
+    def program() -> Optional[Settings.Status]:
+        pass
+
+    # Добавить все константы в настройках в какой-либо словарь, чтобы по переменной content доставать их и показывать
+    def check_settings(self, content: str = '*'):
+        pass
+
+    def change_settings():
+        pass
+
+    def set_id_to_one(self, ):
+        Settings.LOG_ID = 1
+
+        Settings.Status.ID = Messages.OPERATION_DONE['ID']
+        Settings.Status.MESSAGE = Messages.OPERATION_DONE['MESSAGE']
+
+        return Settings.Status if Settings.RETURN_STATUS else None
