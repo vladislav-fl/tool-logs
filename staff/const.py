@@ -1,15 +1,11 @@
 class Settings:
-    _DEV         = True
-    _DEV_VER     = '0.1.1'
-    _DEV_STABLE  = True
+    _DEV                 = True
+    _DEV_VER_CURRENT     = '0.9.0'
+    _DEV_VER_STABLE      = '0.1.1'
 
-    _PRJ         = 'DEV'
-    _PRJ_VER     = _DEV_VER
-    _PRJ_STABLE  = True
-
-    _RLS         = False
-    _RLS_VER     = '0.0.0'
-    _RLS_STABLE  = False
+    _RLS                 = False
+    _RLS_VER_CURRENT     = '0.0'
+    _RLS_VER_STABLE      = '0.0'
 
     # Constants that should be set from the beginning (otherwise they will be set by default):
     
@@ -23,20 +19,9 @@ class Settings:
 
     LOG_ID                   = 1
 
-    NEED_TO_RETURN_LOG_ID    = False
-    # OBJECTS_IN_ONE_LINE      = False
     PREFIX_TYPE              = 'NONE'
     PREFIX                   = ''
-
     RETURN_STATUS            = True
-
-    TEST                     = False
-    RETURN_STATUS_BY_DEFAULT = True
-
-    OPERATION_STATUS         = ''
-
-    _ANTI_RECURSION          = 0
-    _STANDART_STREAM_RETURN_IF_OPERATION_TYPE_IS_BAD = False
     
     class Status:
         ID                   = 0
@@ -51,7 +36,9 @@ class Errors:
     HTTP_RETURNED_BAD_STATUS             = {'ID': 11, 'MESSAGE': 'HTTP you tried to send log returned bad status'}
 
     CANT_OPEN_TXT_FILE                   = {'ID': 13, 'MESSAGE': 'Cant open provided txt file. Check <path> and try again'}
-    CANT_OPEN_JSON_FILE                   = {'ID': 14, 'MESSAGE': 'Cant open provided json file. Check <path> and try again'}
+    CANT_OPEN_JSON_FILE                  = {'ID': 14, 'MESSAGE': 'Cant open provided json file. Check <path> and try again'}
+
+    ERROR_WHILE_STREAMING_IN_PROGRAM     = {'ID': 15, 'MESSAGE': 'Error accured while streaming in program. Program returned: '}
 
 
 class Warnings:

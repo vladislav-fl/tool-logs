@@ -148,8 +148,49 @@ class Log():
 
         return Settings.Status if Settings.RETURN_STATUS else None
 
-    def program() -> Optional[Settings.Status]:
-        pass
+    def program(self, path: str, log: any, program_window: object, rules: Optional[Union[list, dict]] = None) -> Optional[Settings.Status]:
+        """
+            TESTING IN CURRENT TIME
+
+            program_window: your own function to connect to your programm that has 3 arguments:
+
+                1. `path`
+                2. `log`
+                3. `rules`,
+            
+            specified...
+
+            Example:
+
+            program_window(path, log, rules)
+        """
+        Settings.STREAM_LOG = str(log)
+        Settings.STREAM_PATH = path
+
+        if Settings.PREFIX_TYPE == 'LOG_ID':
+            Settings.STREAM_LOG = f'[{str(Settings.LOG_ID)}] ' + Settings.STREAM_LOG
+        elif Settings.PREFIX_TYPE == 'CUSTOM':
+            Settings.STREAM_LOG = f'{str(Settings.PREFIX)} ' + Settings.STREAM_LOG
+        elif Settings.PREFIX_TYPE == 'NONE':
+            pass
+        else:
+            Settings.Status.ID = Warnings.WRONG_PREFIX_TYPE_WHILE_STREAMING['ID']
+            Settings.Status.MESSAGE = Warnings.WRONG_PREFIX_TYPE_WHILE_STREAMING['MESSAGE']
+
+            return Settings.Status if Settings.RETURN_STATUS else None
+
+        try:
+            program_window(Settings.STREAM_PATH, Settings.STREAM_LOG, rules)
+        except Exception as error:
+            Settings.Status.ID = Errors.ERROR_WHILE_STREAMING_IN_PROGRAM['ID']
+            Settings.Status.MESSAGE = Errors.ERROR_WHILE_STREAMING_IN_PROGRAM['MESSAGE'] + str(error)
+
+            return Settings.Status if Settings.RETURN_STATUS else None
+
+        Settings.Status.ID = Messages.OPERATION_DONE['ID']
+        Settings.Status.MESSAGE = Messages.OPERATION_DONE['MESSAGE']
+
+        return Settings.Status if Settings.RETURN_STATUS else None
 
     # Добавить все константы в настройках в какой-либо словарь, чтобы по переменной content доставать их и показывать
     def check_settings(self, content: str = '*'):
