@@ -49,3 +49,5 @@ Tool that helps You to collect all logs in one place.
         Added test.py to test whole project.
         
         Going to add program stream and some info to functions for helping to work with this module
+
+    0.1.1         13 October 2022

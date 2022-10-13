@@ -1,6 +1,6 @@
 class Settings:
     _DEV         = True
-    _DEV_VER     = '0.1.0'
+    _DEV_VER     = '0.1.1'
     _DEV_STABLE  = True
 
     _PRJ         = 'DEV'
