@@ -39,3 +39,5 @@ status = log.set_id_to_one()
 status: Settings.Status = log.print('Hello, World!')
 print(status.ID)
 print(status.MESSAGE)
+
+

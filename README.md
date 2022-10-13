@@ -51,3 +51,9 @@ Tool that helps You to collect all logs in one place.
         Going to add program stream and some info to functions for helping to work with this module
 
     0.1.1         13 October 2022
+
+    0.9.0         13 October 2022
+    # Some info about 0.9.0:
+        Almost all functions (only program function left) are ready to go
+        test.py is ready to go (only program function left)
+        All work in 0.9.0 version will be on LOGS_CONSOLE and program function and it will probably be ready for full user-experience!
